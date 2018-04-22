@@ -1,5 +1,5 @@
-maxLen = 5 #分词的最大长度
-punc = '!#$%^&*+-,./;:<=>?@[\\]_~`|~！·%￥#@……&*（）{}【】|、：；“‘”’？《》，。/'    #待替换的标点符号
+maxLen = 7 #分词的最大长度
+punc = '!#$%^&*+-,./;:<=>?@[\\]_~`|~！·%￥#@……&*（）{}【】|、：；“‘”’？《》，。/1234567890qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM'    #待替换的标点符号
 
 #预先处理文件中的标点符号，并以列表形式返回
 def getText(fpath):
@@ -12,6 +12,29 @@ def getText(fpath):
     f.close()
     return words
 
+def sortBase(basePath): #将词典进行分类
+    words=[]
+    lst = []
+
+    f =open(basePath,'r')
+    txt = f.read()
+    base = txt.split()
+    f.close()
+
+    for i in range(maxLen-1):
+        words.append('\n')
+        lst.append('')
+
+    for word in base:
+        length = len(word)
+        if length <= maxLen:
+            words[length-2] = words[length-2] + " " +word
+
+    for j in range(maxLen-1):
+        lst[j] = words[j].split()
+    return lst
+
+
 #将生成的列表写入文件
 def wtText(fpath,lst):
     f = open(fpath,'a')
@@ -23,8 +46,8 @@ def wtText(fpath,lst):
 def match(s1,lst):      #字符串匹配
     n = len(s1)
     for i in range(n-1):
-        for word in lst:
-            temp = s1[-(n-i):]
+        temp = s1[-(n-i):]
+        for word in lst[n-2-i]:
             if  temp == word:
                 return word,(n-i)
     return s1[-1],1
@@ -64,13 +87,10 @@ def main():
     wpath = 'text.txt'
     basePath = '词典.txt'
 
-    f =open(basePath,'r')
-    txt = f.read()
-    base = txt.split()
-    f.close()
+    baseList = sortBase(basePath)
 
     words = getText(rpath)
-    wordList = divWords(words,base)
+    wordList = divWords(words,baseList)
 
     wtText(wpath,wordList)
 
