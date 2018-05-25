@@ -6,7 +6,7 @@ def getText(fpath):
     f = open(fpath,'r')
     txt = f.read()
     for ch in punc:                 #在txt中遍历punc并进行相关替换
-        txt = txt.replace(ch,'\n')
+        txt = txt.replace(ch,' ')
     words = txt.split()             #将字符串转换成列表
     #print(len(words))
     f.close()
@@ -34,14 +34,6 @@ def sortBase(basePath): #将词典进行分类
         lst[j] = words[j].split()
     return lst
 
-
-#将生成的列表写入文件
-def wtText(fpath,lst):
-    f = open(fpath,'a')
-    for word in lst:
-        item = word + ' '
-        f.write(item)
-    f.close()
 
 def match(s1,lst):      #字符串匹配
     n = len(s1)
@@ -82,16 +74,12 @@ def divWords(lst,base):
             wordList.append(item)
     return wordList
 
-def main():
-    rpath = '1-18631.txt'
-    wpath = 'text.txt'
+def seperate(rpath):
     basePath = '词典.txt'
-
     baseList = sortBase(basePath)
 
     words = getText(rpath)
     wordList = divWords(words,baseList)
 
-    wtText(wpath,wordList)
+    return wordList
 
-main()
