@@ -112,47 +112,15 @@ def classifyNB(vocabList,testArr,pVec,pClass1):  #朴素贝叶斯分类
         if p[j] == pMax:
             return j
 
-'''def classifyNB(vocabList,testEntry,p0Vec,p1Vec,p2Vec,p3Vec,p4Vec,p5Vec,p6Vec,p7Vec,p8Vec,pClass1):  #朴素贝叶斯分类
-    #先将输入文本处理成特征向量
-    regEx = re.compile('\\W*') #正则匹配分割，以字母数字的任何字符为分隔符
-    testArr=regEx.split(testEntry)
-    testVec=array(setOfWords2Vec(vocabList,testArr))
-    p = []
-
-    #此处的乘法并非矩阵乘法，而是矩阵相同位置的2个数分别相乘
-    #矩阵乘法应当 dot(A,B) 或者 A.dot(B)
-    #下式子是原式子取对数，因此原本的连乘变为连加
-    p1=sum(testVec*p1Vec)+log(pClass1)
-    p0=sum(testVec*p0Vec)+log(1.0-pClass1)
-
-    p0 = sum(testVec*p0Vec) + log(pClass1[0])
-    p1 = sum(testVec*p1Vec) + log(pClass1[1])
-    p2 = sum(testVec*p2Vec) + log(pClass1[2])
-    p3 = sum(testVec*p3Vec) + log(pClass1[3])
-    p4 = sum(testVec*p4Vec) + log(pClass1[4])
-    p5 = sum(testVec*p5Vec) + log(pClass1[5])
-    p6 = sum(testVec*p6Vec) + log(pClass1[6])
-    p7 = sum(testVec*p7Vec) + log(pClass1[7])
-    p8 = sum(testVec*p8Vec) + log(pClass1[8])
-
-    pMax = max(p0,p1,p2,p3,p4,p5,p6,p7,p8)
-    
-    for j in range(9):
-        if p(j) == pMax:
-            return j'''
-
 #测试方法
-def testingNB():
+def testingNB(testEntry):
     postingList, classVec = loadTrainDataSet()
     vocabList = getText('总词表.txt')
     trainMatrix = createTrainMatrix(vocabList,postingList)
     pVec, pAb = trainNB0(trainMatrix,classVec)
 
-    fpath = '105815.txt'
-    testEntry = seperate(fpath)
-
     judge = classifyNB(vocabList,testEntry,pVec,pAb)
-    if judge == 0:
+    '''if judge == 0:
         print("--------彩票--------")
     elif judge == 1:
         print("--------房产--------")
@@ -169,7 +137,7 @@ def testingNB():
     elif judge == 7:
         print("--------体育--------")
     else:
-        print("--------娱乐--------")
+        print("--------娱乐--------")'''
 
-testingNB()
+    return judge
 
