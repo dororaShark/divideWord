@@ -3,7 +3,7 @@ punc = '!#$%^&*+-,./;:<=>?@[\\]_~`|~！·%￥#@……&*（）{}【】|、：；�
 
 #预先处理文件中的标点符号，并以列表形式返回
 def getText(fpath):
-    f = open(fpath,'r')
+    f = open(fpath,'r',errors='ignore')
     txt = f.read()
     for ch in punc:                 #在txt中遍历punc并进行相关替换
         txt = txt.replace(ch,' ')
@@ -74,9 +74,9 @@ def divWords(lst,base):
             wordList.append(item)
     return wordList
 
-def seperate(rpath):
-    basePath = '词典.txt'
-    baseList = sortBase(basePath)
+def seperate(rpath,baseList):
+    '''basePath = '词典.txt'
+    baseList = sortBase(basePath)'''
 
     words = getText(rpath)
     wordList = divWords(words,baseList)
