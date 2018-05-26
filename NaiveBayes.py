@@ -1,18 +1,110 @@
 # coding=UTF-8
-from numpy import *
-from separate import *
+import os
 import matplotlib.pyplot as plt
 import time
 import math
 import re
+from numpy import *
 
+maxLen = 7 #分词的最大长度
+punc = '!#$%^&*+-,./;():<=>?@[\\]_~`|~！·%￥#@……&*（）{}【】|、：；“‘”’？《》，。/1234567890qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM'    #待替换的标点符号
+classType = ['彩票','房产','股票','教育','科技','社会','时尚','体育','娱乐']
+classNum = 9
 n = 9
+
+#------------------------------------------------------------------------------
+#预先处理文件中的标点符号，并以列表形式返回
+def getText(fpath):
+    f = open(fpath,'r')
+    txt = f.read()
+    for ch in punc:                 #在txt中遍历punc并进行相关替换
+        txt = txt.replace(ch,' ')
+    words = txt.split()             #将字符串转换成列表
+    f.close()
+    return words
+
+def getText2(fpath):
+    f = open(fpath,'r',encoding = 'utf-8',errors='ignore')
+    txt = f.read()
+    for ch in punc:                 #在txt中遍历punc并进行相关替换
+        txt = txt.replace(ch,' ')
+    words = txt.split()             #将字符串转换成列表
+    f.close()
+    return words
+
+def sortBase(basePath): #将词典进行分类
+    words=[]
+    lst = []
+
+    f =open(basePath,'r')
+    txt = f.read()
+    base = txt.split()
+    f.close()
+
+    for i in range(maxLen-1):
+        words.append('\n')
+        lst.append('')
+
+    for word in base:
+        length = len(word)
+        if length <= maxLen:
+            words[length-2] = words[length-2] + " " +word
+
+    for j in range(maxLen-1):
+        lst[j] = words[j].split()
+    return lst
+
+def match(s1,lst):      #字符串匹配
+    n = len(s1)
+    for i in range(n-1):
+        temp = s1[-(n-i):]
+        for word in lst[n-2-i]:
+            if  temp == word:
+                return word,(n-i)
+    return s1[-1],1
+
+def divWords(lst,base):
+    wordList = []
+    for words in lst:
+        s2 = ""
+        s1 = ""
+        if len(words) < maxLen:    #待匹配字符串小于最大分词长度
+            s1 = words
+            length = len(words)
+        else:
+            s1 = words[-maxLen:]
+            length = maxLen
+
+        while s1:
+            subString,n = match(s1,base)
+            s2 = s2 + " " + subString
+
+            words = words[:-n]
+            if len(words) < maxLen:    #待匹配字符串小于最大分词长度
+                s1 = words
+                length = len(words)
+            else:
+                s1 = words[-maxLen:]
+                length = maxLen
+
+        s2 = s2.split()
+        s2.reverse()
+        for item in s2:
+            wordList.append(item)
+    return wordList
+
+def seperate(rpath,baseList):
+    words = getText(rpath)
+    wordList = divWords(words,baseList)
+    return wordList
+#-------------------------------------------------------------------------------------------
 
 def loadTrainDataSet(): #读取训练集
     postingList=[]   #邮件表，二维数组
     classVec=[]
     fileName = ['彩票.txt','房产.txt','股票.txt','教育.txt','科技.txt','社会.txt','时尚.txt','体育.txt','娱乐.txt']
     for i in range(n):
+        temp = []
         classVec.append(i)
         temp = getText(fileName[i])
         postingList.append(temp)
@@ -58,7 +150,7 @@ def trainNB0(trainMatrix,trainCategory):
     #分子赋值为1，分母赋值为2（拉普拉斯平滑）
     for j in range(9):
         pNum.append(ones(numWords)) #初始化向量，代表该类样本中词j出现次数
-        pDenom.append(2.0)          #九类样本的总词数
+        pDenom.append(2.0)             #九类样本的总词数
 
     for i in range(numTrainDocs):
         if trainCategory[i] == 1:
@@ -91,8 +183,8 @@ def trainNB0(trainMatrix,trainCategory):
 
     for i in range(9):
         #取对数，之后的乘法就可以改为加法，防止数值下溢损失精度
-        pVect.append(log(pNum[i]/pDenom[i]))    #概率向量(p(x0=1|y=8),p(x1=1|y=8),...p(xn=1|y=8))
-
+        pVect.append(log(pNum[i]/pDenom[i]))    #概率向量(p(x0=1|y=i),p(x1=1|y=i),...p(xn=1|y=i))
+        #pVect.append(pNum[i]/pDenom[i])
     return pVect,pAbusive
 
 def classifyNB(vocabList,testArr,pVec,pClass1):  #朴素贝叶斯分类
@@ -106,70 +198,55 @@ def classifyNB(vocabList,testArr,pVec,pClass1):  #朴素贝叶斯分类
     for i in range(9):
         p.append(sum(testVec*pVec[i]) + log(pClass1[i]))
 
+
+    for u in range(9):
+        print(p[u])
     pMax = max(p)
 
     for j in range(9):
         if p[j] == pMax:
             return j
 
-'''def classifyNB(vocabList,testEntry,p0Vec,p1Vec,p2Vec,p3Vec,p4Vec,p5Vec,p6Vec,p7Vec,p8Vec,pClass1):  #朴素贝叶斯分类
-    #先将输入文本处理成特征向量
-    regEx = re.compile('\\W*') #正则匹配分割，以字母数字的任何字符为分隔符
-    testArr=regEx.split(testEntry)
-    testVec=array(setOfWords2Vec(vocabList,testArr))
-    p = []
-
-    #此处的乘法并非矩阵乘法，而是矩阵相同位置的2个数分别相乘
-    #矩阵乘法应当 dot(A,B) 或者 A.dot(B)
-    #下式子是原式子取对数，因此原本的连乘变为连加
-    p1=sum(testVec*p1Vec)+log(pClass1)
-    p0=sum(testVec*p0Vec)+log(1.0-pClass1)
-
-    p0 = sum(testVec*p0Vec) + log(pClass1[0])
-    p1 = sum(testVec*p1Vec) + log(pClass1[1])
-    p2 = sum(testVec*p2Vec) + log(pClass1[2])
-    p3 = sum(testVec*p3Vec) + log(pClass1[3])
-    p4 = sum(testVec*p4Vec) + log(pClass1[4])
-    p5 = sum(testVec*p5Vec) + log(pClass1[5])
-    p6 = sum(testVec*p6Vec) + log(pClass1[6])
-    p7 = sum(testVec*p7Vec) + log(pClass1[7])
-    p8 = sum(testVec*p8Vec) + log(pClass1[8])
-
-    pMax = max(p0,p1,p2,p3,p4,p5,p6,p7,p8)
-    
-    for j in range(9):
-        if p(j) == pMax:
-            return j'''
-
 #测试方法
 def testingNB():
+
     postingList, classVec = loadTrainDataSet()
     vocabList = getText('总词表.txt')
     trainMatrix = createTrainMatrix(vocabList,postingList)
     pVec, pAb = trainNB0(trainMatrix,classVec)
 
-    fpath = '105815.txt'
-    testEntry = seperate(fpath)
+    result = []
+    classScale = []
 
-    judge = classifyNB(vocabList,testEntry,pVec,pAb)
-    if judge == 0:
-        print("--------彩票--------")
-    elif judge == 1:
-        print("--------房产--------")
-    elif judge == 2:
-        print("--------股票--------")
-    elif judge == 3:
-        print("--------教育--------")
-    elif judge == 4:
-        print("--------科技--------")
-    elif judge == 5:
-        print("--------社会--------")
-    elif judge == 6:
-        print("--------时尚--------")
-    elif judge == 7:
-        print("--------体育--------")
-    else:
-        print("--------娱乐--------")
+    basePath = '词典.txt'
+    baseList = sortBase(basePath)
+
+    result = [0,0,0,0,0,0,0,0,0]
+
+    for i in range(classNum):
+        temp = [0,0,0,0,0,0,0,0,0]
+        rootdir = classType[i]
+        list = os.listdir(rootdir)      #列出文件夹下所有的目录与文件
+        fileNum = len(list)
+        classScale.append(fileNum)
+
+        for j in range(0,5):
+            path = os.path.join(rootdir,list[j])
+            if os.path.isfile(path):
+                words = getText2(path)
+                wordList = divWords(words,baseList)
+                judge = classifyNB(vocabList,wordList,pVec,pAb)
+                temp[judge] += 1
+                print(judge)
+
+        print(temp)
+        for k in range(n):
+            result[k] = result[k] + temp[k]
+        print(result)
+        print('----------------------'+str(i)+'------------------')
+
+
+    print(result)
+
 
 testingNB()
-
